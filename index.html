@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Time in Words Clock by djmclean</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Time in Words Clock - Copyright (c) 2013-2016 djmclean" />
+  <meta name="Author" content="djmclean" />
+
+  <script>
+  var aCanvas;
+  var aContext;
+  var language;
+  var bgColor;
+  var txtColor;
+  var fontFace;
+  var italic;
+  var roundUp;
+
+  function IsNull(a, b) {
+    return (a + "" != "undefined") && (a + "" != "null") ? a : b;
+  }
+
+  function Redraw() {
+    aCanvas.width = window.innerWidth;
+    aCanvas.height = window.innerHeight;
+    aContext.fillStyle = bgColor;
+    aContext.fillRect(0, 0, aCanvas.width, aCanvas.height);
+
+    var s = ["0", "", "", ""];
+    try {
+      s = TimeInWords(roundUp);
+    }
+    catch(e) {}
+
+    aContext.fillStyle = txtColor;
+
+    if(s[1].length == 0) { // 2 lines
+      aContext.font = (aCanvas.height * 2.8) + "% " + fontFace;
+      if(s[0] == "1")
+        aContext.font = "bold " + aContext.font;
+      if(italic == "true")
+        aContext.font = "italic " + aContext.font;
+      aContext.textBaseline = 'top';
+      aContext.fillText(s[2], 10, 0, aCanvas.width - 18);
+
+      aContext.font = (aCanvas.height * 2.8) + "% " + fontFace;
+      if(s[0] == "2")
+        aContext.font = "bold " + aContext.font;
+      if(italic == "true")
+        aContext.font = "italic " + aContext.font;
+      aContext.textBaseline = 'bottom';
+      aContext.fillText(s[3], 10, aCanvas.height, aCanvas.width - 18);
+    }
+    else { // 3 lines
+      aContext.font = (aCanvas.height * 2) + "% " + fontFace;
+      if(s[0] == "0")
+        aContext.font = "bold " + aContext.font;
+      if(italic == "true")
+        aContext.font = "italic " + aContext.font;
+      aContext.textBaseline = 'top';
+      aContext.fillText(s[1], 10, 0, aCanvas.width - 18);
+
+      aContext.font = (aCanvas.height * 2) + "% " + fontFace;
+      if(s[0] == "1")
+        aContext.font = "bold " + aContext.font;
+      if(italic == "true")
+        aContext.font = "italic " + aContext.font;
+      aContext.textBaseline = 'middle';
+      aContext.fillText(s[2], 10, aCanvas.height / 2, aCanvas.width - 18);
+
+      aContext.font = (aCanvas.height * 2) + "% " + fontFace;
+      if(s[0] == "2")
+        aContext.font = "bold " + aContext.font;
+      if(italic == "true")
+        aContext.font = "italic " + aContext.font;
+      aContext.textBaseline = 'bottom';
+      aContext.fillText(s[3], 10, aCanvas.height, aCanvas.width - 18);
+    }
+  }
+
+  function a_ondblclick() {
+    window.open("settings.htm", "settings", "height=310px, width=460px, resizable=1, scrollbars=1, status=0");
+  }
+
+  function LoadTiw() {
+    var tiw = document.createElement("script");
+    tiw.async = true;
+    tiw.src = language + "/timeinwords.min.js";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(tiw, s);
+  }
+
+  function body_onload() {
+    aCanvas = document.getElementById("a");
+    aContext = aCanvas.getContext("2d");
+
+    language = "en";
+    bgColor = "#000000";
+    txtColor = "#aaaaaa";
+    fontFace = "sans-serif";
+    italic = "false";
+    roundUp = "true";
+
+    if(window.localStorage) {
+      language = IsNull(localStorage.getItem("language"), language);
+      bgColor = IsNull(localStorage.getItem("bgColor"), bgColor);
+      txtColor = IsNull(localStorage.getItem("txtColor"), txtColor);
+      fontFace = IsNull(localStorage.getItem("fontFace"), fontFace);
+      italic = IsNull(localStorage.getItem("italic"), italic);
+      roundUp = IsNull(localStorage.getItem("roundUp"), roundUp);
+    }
+
+    LoadTiw();
+    window.setTimeout(Redraw, 200);
+    window.setInterval(Redraw, 2000);
+  }
+  </script>
+</head>
+
+<body style="margin:0;borderstyle:none;overflow:hidden" onload="body_onload()" onresize="Redraw()">
+  <canvas id="a" ondblclick="a_ondblclick()">Sorry, your browser does not support the HTML5 canvas.</canvas>
+</body>
+</html>
