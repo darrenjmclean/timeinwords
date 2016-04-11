@@ -11,6 +11,7 @@
   var aCanvas;
   var aContext;
   var language;
+  var prevLanguage;
   var bgColor;
   var txtColor;
   var fontFace;
@@ -22,6 +23,11 @@
   }
 
   function Redraw() {
+    if(language != prevLanguage) {
+      location.reload();
+      return;
+    }
+
     aCanvas.width = window.innerWidth;
     aCanvas.height = window.innerHeight;
     aContext.fillStyle = bgColor;
@@ -111,6 +117,7 @@
       roundUp = IsNull(localStorage.getItem("roundUp"), roundUp);
     }
 
+    prevLanguage = language;
     LoadTiw();
     window.setTimeout(Redraw, 200);
     window.setInterval(Redraw, 2000);
