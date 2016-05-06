@@ -1,6 +1,8 @@
 # timeinwords
 Time in Words Clock
 
+http://darrenjmclean.github.io/timeinwords/
+
 Double-click to change settings. You can change the appearance and select from these languages:
 
 - Dansk | Danish
