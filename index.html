@@ -6,10 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Time in Words Clock - Copyright (c) 2013-2016 djmclean" />
   <meta name="Author" content="djmclean" />
+  <link rel="stylesheet" href="style.css">
 
   <script>
   var aCanvas;
   var aContext;
+  var aTimer;
+  var tiw;
   var language;
   var prevLanguage;
   var bgColor;
@@ -22,11 +25,57 @@
     return (a + "" != "undefined") && (a + "" != "null") ? a : b;
   }
 
-  function Redraw() {
-    if(language != prevLanguage) {
-      location.reload();
-      return;
+  function Order(a, b) {
+    var au = a.toUpperCase();
+    var bu = b.toUpperCase();
+    return au < bu ? -1 : au === bu ? 0 : +1;
+  }
+
+  function GetFontListX() {
+    var o = document.getElementById('dialogHelperId');
+    if(o && o.fonts) {
+      var fontList = [];
+      for(var x = 0; x < o.fonts.count; x++)
+        fontList[x] = o.fonts(x + 1);
+      return fontList.sort(Order);
     }
+    return [];
+  }
+
+  function CreateFontOptions(fonts) {
+    if(document.getElementById("fontFace").tagName.toUpperCase() != "SELECT") {
+      var currentVal = document.getElementById("fontFace").value;
+      document.getElementById("divFont").innerHTML = '<label for="fontFace">Font&nbsp;Face</label><select id="fontFace" />';
+      var o = document.getElementById("fontFace");
+      var oOption = document.createElement("option");
+      o.add(oOption);
+      oOption.value = oOption.text = "sans-serif";
+      for(var x = 0; x < fonts.length; x++) {
+        oOption = document.createElement("option");
+        o.add(oOption);
+        oOption.value = oOption.text = fonts[x];
+      }
+      document.getElementById("fontFace").value = currentVal;
+    }
+  }
+
+  function getFontList(user_fonts) {
+    var fonts = null;
+    var obj = document.getElementById('font_getter');
+    if(typeof(obj.GetVariable) != 'undefined')
+      fonts = obj.GetVariable('/:user_fonts');
+    else if(typeof(user_fonts) != 'undefined')
+      fonts = unescape(user_fonts);
+    if(fonts) {
+      if(typeof(fonts) == 'string')
+        fonts = fonts.split(',');
+      CreateFontOptions(fonts.sort(Order));
+    }
+  }
+
+  function Redraw() {
+    if(language != prevLanguage)
+      LoadTiw();
 
     aCanvas.width = window.innerWidth;
     aCanvas.height = window.innerHeight;
@@ -40,7 +89,6 @@
     catch(e) {}
 
     aContext.fillStyle = txtColor;
-
     if(s[1].length == 0) { // 2 lines
       aContext.font = (aCanvas.height * 2.8) + "% " + fontFace;
       if(s[0] == "1")
@@ -86,13 +134,31 @@
   }
 
   function a_ondblclick() {
-    window.open("settings.htm", "settings", "height=310px, width=460px, resizable=1, scrollbars=1, status=0");
+    clearTimeout(aTimer);
+    document.getElementById("language").value = language;
+    document.getElementById("bgColor").value = bgColor;
+    document.getElementById("txtColor").value = txtColor;
+    document.getElementById("fontFace").value = fontFace;
+    document.getElementById("italic").checked = (italic == "true");
+    document.getElementById("roundUp").checked = (roundUp == "true");
+    document.getElementById('cd-panel').className = "cd-panel from-right is-visible";
+  }
+
+  function a_onmousedown() {
+    aTimer = window.setTimeout(a_ondblclick, 750);
+  }
+
+  function a_onmouseup() {
+    clearTimeout(aTimer);
   }
 
   function LoadTiw() {
-    var tiw = document.createElement("script");
+    prevLanguage = language;
+    if(tiw && tiw.parentElement)
+      tiw.parentElement.removeChild(tiw);
+    tiw = document.createElement("script");
     tiw.async = true;
-    tiw.src = language + "/timeinwords.min.js";
+    tiw.src = language + "/timeinwords.js";
     var s = document.getElementsByTagName("script")[0];
     s.parentNode.insertBefore(tiw, s);
   }
@@ -100,6 +166,10 @@
   function body_onload() {
     aCanvas = document.getElementById("a");
     aContext = aCanvas.getContext("2d");
+
+    var fonts = GetFontListX();
+    if(fonts.length > 0)
+      CreateFontOptions(fonts);
 
     language = "en";
     bgColor = "#000000";
@@ -117,15 +187,117 @@
       roundUp = IsNull(localStorage.getItem("roundUp"), roundUp);
     }
 
-    prevLanguage = language;
     LoadTiw();
     window.setTimeout(Redraw, 200);
     window.setInterval(Redraw, 2000);
   }
+
+  function btnReset_onclick() {
+    document.getElementById("language").value = "en";
+    document.getElementById("bgColor").value = "#000000";
+    document.getElementById("txtColor").value = "#aaaaaa";
+    document.getElementById("fontFace").value = "sans-serif";
+    document.getElementById("italic").checked = false;
+    document.getElementById("roundUp").checked = true;
+  }
+
+  function btnOK_onclick() {
+    btnApply_onclick();
+    btnCancel_onclick();
+  }
+
+  function btnCancel_onclick() {
+    document.getElementById('cd-panel').className = "cd-panel from-right";
+  }
+
+  function btnApply_onclick() {
+    language = document.getElementById("language").value;
+    bgColor = document.getElementById("bgColor").value;
+    txtColor = document.getElementById("txtColor").value;
+    fontFace = document.getElementById("fontFace").value;
+    italic = document.getElementById("italic").checked ? "true" : "false";
+    roundUp = document.getElementById("roundUp").checked ? "true" : "false";
+
+    if(window.localStorage) {
+      localStorage.setItem("language", language);
+      localStorage.setItem("bgColor", bgColor);
+      localStorage.setItem("txtColor", txtColor);
+      localStorage.setItem("fontFace", fontFace);
+      localStorage.setItem("italic", italic);
+      localStorage.setItem("roundUp", roundUp);
+    }
+
+    Redraw();
+  }
+
+  function body_onkeydown(e) {
+    var ch = e.charCode ? e.charCode : e.keyCode;
+    if(ch == 13)
+      btnOK_onclick();
+    if(ch == 27)
+      btnCancel_onclick();
+  }
   </script>
 </head>
 
-<body style="margin:0;borderstyle:none;overflow:hidden" onload="body_onload()" onresize="Redraw()">
-  <canvas id="a" ondblclick="a_ondblclick()">Sorry, your browser does not support the HTML5 canvas.</canvas>
+<body style="margin:0;border-style:none;overflow:hidden" onload="body_onload()" onresize="Redraw()" onkeydown="body_onkeydown(event)">
+  <canvas id="a" ondblclick="a_ondblclick()" onmousedown="a_onmousedown()" onmouseup="a_onmouseup()">Sorry, your browser does not support the HTML5 canvas.</canvas>
+
+  <object id="dialogHelperId" classid="clsid:3050f819-98b5-11cf-bb82-00aa00bdce0b" width="0px" height="0px" style="float:left"></object>
+  <object id="font_getter" name="font_getter" type="application/x-shockwave-flash" data="get_fonts.swf" width="0px" height="0px" style="float:left"><param name="movie" value="get_fonts.swf" /></object>
+
+
+  <div id="cd-panel" class="cd-panel from-right">
+    <div class="cd-panel-container">
+      <div class="cd-panel-content">
+        
+        <h1>Time in Words Clock by <a href="http://www.djmclean.freeserve.co.uk" target="djm">djmclean</a></h1>
+        <fieldset>
+          <legend>Settings</legend>
+          <div class="box-text">
+            <label for="language">Language</label>
+            <select id="language">
+              <option value="da">Dansk</option>
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="sv">Svensk</option>
+              <option value="ja-hira">にほんご</option>
+              <option value="ja">日本語</option>
+              <option value="zh">中文</option>
+            </select>
+          </div>
+          <div class="box-text">
+            <label for="bgColor">Background&nbsp;Colour</label>
+            <input type="color" id="bgColor" maxlength="250" size="20" />
+          </div>
+          <div class="box-text">
+            <label for="txtColor">Text&nbsp;Colour</label>
+            <input type="color" id="txtColor" maxlength="250" size="20" />
+          </div>
+          <div id="divFont" class="box-text">
+            <label for="fontFace">Font&nbsp;Face</label>
+            <input type="text" id="fontFace" maxlength="250" size="20" />
+          </div>
+          <div class="box-check">
+            <input type="checkbox" id="italic" />
+            <label for="italic">Italic</label>
+          </div>
+          <div class="box-check">
+            <input type="checkbox" id="roundUp" />
+            <label for="roundUp">Round&nbsp;up&nbsp;to&nbsp;nearest&nbsp;5&nbsp;min</label>
+          </div>
+          <div class="buttonrow">
+            <button type="button" onclick="btnReset_onclick()">Reset&nbsp;All</button>
+          </div>
+        </fieldset>
+
+        <div class="buttonrow">
+          <button type="button" onclick="btnOK_onclick()">OK</button>
+          <button type="button" onclick="btnCancel_onclick()">Cancel</button>
+          <button type="button" id="btnApply" onclick="btnApply_onclick()">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
